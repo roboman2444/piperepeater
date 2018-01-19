@@ -40,13 +40,23 @@ void printem(int dummy){
 
 
 int main(const int argc, const char ** argv){
+	FILE * input_file = stdin;
+	FILE *f = NULL;
+
+	if(argc > 1 && (f = fopen(argv[1], "r")))
+		input_file = f;
+
+	int filenum = fileno(input_file);
+
 
 
 	static struct termios oldt, newt;
-	tcgetattr( STDIN_FILENO, &oldt);
+	tcgetattr( filenum, &oldt);
 	newt = oldt;
 	newt.c_lflag &= ~(ICANON);
-	tcsetattr( STDIN_FILENO, TCSANOW, &newt);
+	tcsetattr( filenum, TCSANOW, &newt);
+
+
 	listplace = 1;
 	listsize = LISTSIZESTEP;
 	list = malloc(listsize * sizeof(listitem_t));
@@ -69,7 +79,7 @@ int main(const int argc, const char ** argv){
 
 
 	char in;
-	for(in = getc(stdin); in != EOF; in = getc(stdin)){
+	for(in = getc(input_file); in != EOF; in = getc(input_file)){
 		//grab time of input
 		clock_gettime(CLOCK_REALTIME, &thetime);
 		long long unsigned int curticks = thetime.tv_sec * 1000 + thetime.tv_nsec/1000000;
@@ -100,7 +110,7 @@ int main(const int argc, const char ** argv){
 		putc(in, stdout);
 		bufferplace++;
 	}
-	tcsetattr( STDIN_FILENO, TCSANOW, &oldt);
+	tcsetattr( filenum, TCSANOW, &oldt);
 	while(1)printem(0);
 
 
@@ -114,6 +124,6 @@ int main(const int argc, const char ** argv){
 
 
 
-
+	if(f) fclose(f);
 	return 0;
 }
